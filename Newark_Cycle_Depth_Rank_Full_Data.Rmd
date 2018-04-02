@@ -12,7 +12,7 @@ knitr::opts_chunk$set(echo = TRUE)
 ### Step 1: Data Collection
 # Read Lake Cycle excel sheet
 library(readxl)
-lake_xls_f <- '/Users/andy/Dropbox/TSCreator/TSCreator development/Developers/Andy/Projects/ML-Data Mining/SpectralAnalysis/LakeCycleHomework_AnalysisExcel.XLS'
+lake_xls_f <- './LakeCycleHomework_AnalysisExcel.XLS'
 excel_sheets(lake_xls_f)
 
 lake_xls <- read_excel(lake_xls_f, sheet='Input Data')
@@ -127,7 +127,8 @@ plot.frequency.spectrum <- function(X.k,
                                     xlab='Frequency',
                                     ylab='Amplitude',
                                     density=FALSE,
-                                    plot.type='l'
+                                    plot.type='l',
+                                    plot.period=FALSE
                                     ) { 
     x <- (0:(length(X.k)-1)) 
     plot.data  <- cbind(x, Mod(X.k))
@@ -154,14 +155,16 @@ plot.frequency.spectrum <- function(X.k,
                 xlim=xlimits, # show only half of the frequency 
                 ylim=ylim,
                 xlab=xlab, ylab="Amplitude") 
-    period <- (max_dr - min_dr) /freq
     
-    plot(period, amp, lwd=2, main="", type=plot.type,
+    if (plot.period) {
+      period <- (max_dr - min_dr) /freq
+      plot(period, amp, lwd=2, main="", type=plot.type,
                 #xaxp=c(0, N, N/6),
                 #xlim=xlimits, # show only half of the frequency 
                 #ylim=ylim,
-                xlab=xlab, 
+                xlab="Period", 
                 ylab="Amplitude") 
+    }
     
 }
 
@@ -172,7 +175,8 @@ xlab = sprintf('Frequency (cycle per %f meters)', max_d - min_d)
 plot.frequency.spectrum(nb_d.fft,
                         xlim=c(0,200),
                         xlab=xlab,
-                        ylab='Amplitude'#,
+                        ylab='Amplitude',
+                        plot.period=TRUE#,
                         #,plot.type = 'h'
 )
 ```
@@ -446,7 +450,7 @@ hm_l <- c(hm_l, 'combined cycle')
 legend('topleft', legend=hm_l, col = c(1, 2, 3, 4, 5, 6,'darkblue'), 
        lty = rep(1,7), cex=0.40)
 
-```
+^```
 
 # Output from R multi-taper library
 ```{r}
@@ -527,7 +531,9 @@ psppu <- with(Pspec, create_poly(freq, dB(spec), spp$stderr.chi.upper))
 plot(psppu$x.x, psppu$y.y, lty=2, type='l', 
      xlim=c(0, 0.2), col=c('green','red'),
      axes=FALSE, xlab='', ylab='')
+```
 
+```{r investigate lomb pacakge spectral methods}
 library(lomb)
 data(ibex)
 lsp(ibex[2:3],)
@@ -537,8 +543,9 @@ lsp(lynx)
 lynx.spec <- lsp(lynx,type='period',from=2,to=20,ofac=5)
 summary(lynx.spec)
 
-lsp(nb_d.dm)
-lsp(nb_d.tap)
+lsp(as.numeric(nb_d$`Depth Rank`))
+lsp(nb_d.dm, main='Lomb-Scargle Periodogram with demeaned data')
+lsp(nb_d.tap, main='Lomb-Scargle Periodogram with demeaned + tapered data')
 lsp(nb_d.tap, type='period')
 
 data(ibex)
@@ -554,8 +561,11 @@ set.seed(444)
 rand.times <- sample(1:length(lynx),30) # select a random vector of sampling times
 randlsp(1000,lynx[rand.times],times=rand.times)
 
-randlsp(x =  nb_d.tap)
+randlsp(x =  nb_d.tap, type='period')
+```
 
+```{r investigate 'spectral' pacakge spectral methods}
+library(spectral)
 # create two sin-functions
 x_orig <- seq(0,1,by=1e-2)
 y_orig <- sin(10*2*pi*x_orig) + 0.3*sin(2*2*pi*x_orig)
@@ -582,7 +592,10 @@ plot(x,y,"l", main = "Gapped signal")
 lines(l2$x, l2$y,lty=2)
 legend("bottomleft",c("gapped","10Hz component"),lty=c(1,2))
 plot(l,main = "Spectrum")
+```
 
+```{r investigate 'RobPer' pacakge spectral methods}
+library(RobPer)
 set.seed(7)
 n <- 120
 # equidistant time series:
@@ -623,4 +636,9 @@ points(PP_konv$freq, PP_new*var(y)*n/2, type="l")
 legend("top",lty=c(1,0), pch=c(-5,1), legend=c("RobPer*var(y)*n/2", "spec.pgram"))
 # Due to different ways of computation, the scaled periodograms are not exactly
 # identical, but show very similar behavior.
+```
+
+```{r }
+
+
 ```

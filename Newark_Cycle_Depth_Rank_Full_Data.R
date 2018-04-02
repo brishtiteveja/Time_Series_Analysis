@@ -1,7 +1,7 @@
 ### Step 1: Data Collection
 # Read Lake Cycle excel sheet
 library(readxl)
-lake_xls_f <- '/Users/andy/Dropbox/TSCreator/TSCreator development/Developers/Andy/Projects/ML-Data Mining/SpectralAnalysis/LakeCycleHomework_AnalysisExcel.XLS'
+lake_xls_f <- './LakeCycleHomework_AnalysisExcel.XLS'
 excel_sheets(lake_xls_f)
 
 lake_xls <- read_excel(lake_xls_f, sheet='Input Data')
@@ -186,3 +186,4 @@ plot(x, y, type='l', lwd=2
      ,xlim=c(0,0.2)
      #,log='y'
      )
+
