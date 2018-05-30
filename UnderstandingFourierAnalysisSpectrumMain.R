@@ -125,6 +125,22 @@ plot.frequency.spectrum <- function(X.k,
                 ylim=ylim,
                 xlab=xlab, ylab="Amplitude") 
 }
+plot.spectrum <- function(X, 
+                          xlimits=c(0,length(X.k)/2), 
+                          xlab='Frequency',
+                          ylab='Amplitude',
+                          density=FALSE,
+                          plot.type='l'
+) {
+  X.k <- fft(X)
+  plot.frequency.spectrum(X.k, 
+                          xlimits, 
+                          xlab,
+                          ylab,
+                          density,
+                          plot.type
+  ) 
+}
 
 acq.freq <- 100                    # data acquisition (sample) frequency (Hz)
 time     <- 6                      # measuring time interval (seconds)
@@ -365,6 +381,7 @@ plot.frequency.spectrum(fft(ldeaths-mean(ldeaths))) # same
 plot(Xspec)
 
 # psd: psdcore (fixed taper)
+library(psd)
 tapinit=1
 Pspec <- psdcore(ldeaths, ntaper = tapinit) 
 
@@ -378,7 +395,7 @@ plot(psppu$x.x, psppu$y.y, lty=2, type='l', axes=FALSE, xlab='', ylab='')
 
 # psd: adaptive (adaptive taper)
 tapinit=5
-Aspec <- pspectrum(ats_lm, ntap.init = tapinit)
+Aspec <- pspectrum(ldeaths, ntap.init = tapinit)
 plot(Aspec)
 
 library(multitaper)
@@ -386,3 +403,357 @@ tapinit=5
 Mtspec <- spec.mtm(ldeaths, k = tapinit, jackknife = TRUE, deltat=1/12, dtUnits="year")
 plot(Mtspec$freq, Mtspec$spec, type='l')
 
+#bspec
+
+# determine spectrum's posterior distribution
+# (for noninformative prior):
+lhspec <- bspec(ldeaths)
+print(lhspec)
+
+# show some more details:
+str(lhspec)
+
+# plot 95 percent central intervals and medians:
+plot(lhspec)
+
+# draw and plot a sample from posterior distribution:
+lines(lhspec$freq, sample(lhspec), type="b", pch=20)
+# compare the default outputs of "bspec()" and "spectrum()":
+bspec1    <- bspec(ldeaths)
+spectrum1 <- spectrum(ldeaths, plot=FALSE)
+plot(bspec1) 
+lines(spectrum1$freq, spectrum1$spec, col="blue")
+# (note -among others- the factor 2 difference)
+
+# match the outputs:
+# Need to suppress  tapering, padding and de-trending
+# (see help for "spec.pgram()"):
+spectrum2 <- spectrum(ldeaths, taper=0, fast=FALSE, detrend=FALSE, plot=FALSE)
+# Need to drop intercept (zero frequency) term:
+bspec2    <- bspec(ldeaths, intercept=FALSE)
+# plot the "spectrum()" output:
+plot(spectrum2)
+# draw the "bspec()" scale parameters, adjusted
+# by the corresponding degrees-of-freedom,
+# so they correspond to one-sided spectrum:
+lines(bspec2$freq, bspec2$scale/bspec2$datadf,
+      type="b", col="green", lty="dashed")
+
+# handle several time series at once...
+data(sunspots)
+# extract three 70-year segments:
+spots1 <- window(sunspots, 1750, 1819.99)
+spots2 <- window(sunspots, 1830, 1899.99)
+spots3 <- window(sunspots, 1910, 1979.99)
+# align their time scales:
+tsp(spots3) <- tsp(spots2) <- tsp(spots1)
+# combine to multivariate time series:
+spots <- ts.union(spots1, spots2, spots3)
+# infer spectrum:
+plot(bspec(spots))
+
+# using bispec 
+bisp <- bispec(ldeaths)
+
+
+# https://www.reddit.com/r/DSP/comments/8gv3fj/plotting_the_power_spectral_density_using_the/
+
+# blackman-tukey spec
+library(timsac)
+auspec(ldeaths, lag = length(ldeaths)*1/3)
+
+# black-man tukey method
+t <- seq(1, 600) #, by=0.1)
+y <- sin(2*pi*t/100) + sin(2*pi*t/41) + sin(2*pi*t/23) # precession
+plot(t, y, t='l')
+
+sp <- spec.pgram(y, detrend = TRUE, log='no', xlim=c(0,0.06))
+
+BTSpec <- auspec(y, lag=length(y)*1/3)
+
+
+lag = as.numeric(1/3)
+
+spec.BT <- function(y, lag=1/3, x_limit=c(0,0.5), plot=TRUE) {
+  x <- as.numeric(length(y) * lag)
+  lagno = round(x)
+
+  #Implementation of the matlab Cross Coorelation Function
+  xcorr <- function(A, B, lagno) {
+    N = length(A);
+    M = length(B);
+    result = rep(0, N + M - 1 );
+    len = length(result);
+  
+    for(m in 1 : len) {  
+      arg = (m - N); 
+      if(arg < 0) {
+        negativeCondition = 1
+        limit = N + arg;
+      }
+      else {
+        negativeCondition = 0
+        limit = N - arg
+      }
+  
+      for(n in 1:limit) {
+        if(negativeCondition == 0) {
+          result[m] <- result[m] + A[arg + n] * B[n]
+        }
+        else {
+          result[m] <- result[m] + A[n] * B[n - arg]
+        }
+      }
+    }
+  
+    nr <- length(result) / 2
+    result <- result[(nr - lagno):(nr + lagno - 2)]
+  
+    return(result)
+  }
+  # Calculate the autocorrelation function
+  #a = ccf(y, y, lag.max = lagno) # little different than xcorr function in matlab
+  #c = a$acf
+
+  c = xcorr(y, y, lagno)
+  length(c)
+  #plot(c, t='l')
+
+  # shift the function to place the zero offset point in 
+  # first location of the vector
+  center = ceiling(length(c)/2)
+  c1 = c[center:length(c)]
+
+  # do the FFT and take the real part
+  pf = Mod(fft(c1))
+  p = pf^2/(2*pi*length(y))
+  
+  # normalize
+  p = p/sd(p)
+
+  # plot the results
+  dt = t[2] - t[1]
+  fNyquist = 0.5/(dt)
+  f = seq(0, fNyquist,length.out = floor(lagno/2.0 + 1))
+  N = length(f)
+  if (plot)
+    plot(f, p[1:N], t='l', xlim=x_limit, 
+     ylab='spectral power', xlab = 'frequency')
+  
+  res <- list(freq=f, spec=p[1:N])
+  
+  return(res)
+}
+
+spec.BT(y, x_limit = c(0,0.06))
+
+
+# Blackman tukey from btpsd
+library(btpsd)
+btpsd <- function(y, type="Tukey", win=N , taper=0.5) {
+  ## INPUT ##
+  ## y = time series of interest
+  ## win = window length = number of autocorrelations in estimation, DEFAULT = 2 * sqrt(lenth(y))
+  ## default window =  Blackman-Tukey
+  
+  y <- y - mean(y)
+  T <- length(y)
+  if ( win >= T ) stop("The length of the window is longer than the data length.")
+  
+  if (is.null(win)) N <- ceiling(2*sqrt(T)) else N <- win
+  
+  if (type =="Tukey") { w <- tukey(win,taper) }
+  if (type =="Hanning") { w <- hanning.window(win) }
+  if (type =="Hamming") { w <- hamming.window(win) }
+  if (type =="Triangular") { w <- tri.window(win) }
+  
+  
+  r <- acf(y, lag.max = N-1,plot=FALSE)$acf;
+  
+  rw <- r*w[-N]
+  
+  est <- Mod(fft(rw))^2/(2*pi*length(y))
+  return(est)
+}
+
+mem.spec <- function(y, ord=5,... ) {
+  ## INPUT ##
+  ## y = time series of interest
+  ## order of AR series
+  ## ... any params to pass to spec.ar
+  
+  y <- y - mean(y)
+  T <- length(y)
+  if ( ord >= T ) stop("The length of the window is longer than the data")
+  
+  sp<-spec.ar(y, method="burg",aic=FALSE, order=ord,...)
+  return(sp)
+}
+
+tukey<-function(n,a) 
+{   
+  t2 <- seq(0,1,length.out=n);
+  per <- a/2; 
+  tl <- floor(per*(n-1))+1;
+  th <- n-tl+1;
+  # Window is defined in three sections: taper, constant, taper
+  w <- c( 0.5+0.5*cos( (pi/per)*(t2[1:tl] - per) ) ,  rep(1,th-tl-1), 0.5+0.5*cos((pi/per)*(t2[th:n] - 1 + per))) 
+  return(w)
+}
+
+hanning.window<-function(n) 
+{
+  if (n == 1 ) 
+    c <- 1
+  else {
+    n <- n - 1
+    c <- 0.5 - 0.5 * cos(2 * pi * (0:n)/n)
+  }
+  return(c)
+}
+
+tri.window<-function(n)
+{
+  c <- c( 2/n*( n/2-abs( seq(0,n-1)-(n-1)/2 ) ) )
+  
+  return(c)
+}
+
+
+
+hamming.window<-function(n) 
+{
+  if (n == 1) 
+    c <- 1
+  else {
+    n <- n - 1
+    c <- 0.54 - 0.46 * cos(2 * pi * (0:n)/n)
+  }
+  return(c)
+}
+
+bt <- btpsd(y)
+nb <- length(bt)
+plot(1:nb, bt, t= 'l', xlim=c(0,(nb/2-1)))
+
+# astrochron mtm library
+library(astrochron)
+# generate example series with periods of 400 ka, 100 ka, 40 ka and 20 ka
+ex = cycles(freqs=c(1/400,1/100,1/40,1/20),start=1,end=1000,dt=5)
+# add AR1 noise
+noise = ar1(npts=200,dt=5,sd=.5)
+ex[2] = ex[2] + noise[2]
+# MTM spectral analysis, with conventional AR1 noise test
+pl(1,title="mtm")
+mtm(ex,ar1=TRUE)
+
+# compare to ML96 analysis
+pl(1, title="mtmML96")
+mtmML96(ex)
+# compare to analysis with LOWSPEC
+pl(1, title="lowspec")
+lowspec(ex)
+# compare to amplitudes from eha
+pl(1,title="eha")
+eha(ex,tbw=3,win=1000,pad=1000)
+
+# Robper lomb scargle unevenly spaced data
+# Example to show the equivalence between the periodogram from Fourier analysis
+# and the Lomb-Scargle periodogram in case of equidistant sampling and equal weighting:
+library(RobPer)
+set.seed(7)
+
+n <- 120
+# equidistant time series:
+zr <- tsgen(ttype="unif", ytype="const", pf=1, redpart= 0, s.outlier.fraction=0.2, 
+    interval=FALSE, npoints=n, ncycles=n, ps=1, SNR=1, alpha=1.5)
+
+str(zr)
+head(zr)
+plot(zr)
+# periodogram of Fourier analysis
+n <- length(stsl_df$Age)
+PP_konv <- spec.pgram(stsl_df$SL.dtrnd25WAvg, taper = 0,pad = 0, fast = FALSE, demean = TRUE,
+    detrend = TRUE, plot = TRUE, log='no', xlim=c(0,0.15))
+
+PP_new <- RobPer(ts=data.frame(Age=stsl_df$Age, SL=stsl_df$SL.dtrnd25WAvg), weighting=FALSE, periods=1/PP_konv$freq,
+    regression="L2", 
+    model="sine")
+
+plot(PP_konv$freq, PP_konv$spec * var(stsl_df$SL.dtrnd25WAvg)*n/2, ylab="periodogram", xlab="frequency",
+    main="Comparison of RobPer(...regression='LS', model='sine') and spec.pgram",
+    type='l',
+    xlim=c(0,0.15))
+
+par(new=T)
+plot(PP_konv$freq, PP_new, type="l", col='red', xlim=c(0,0.15), axes=F, xlab="", ylab="")
+legend("top",lty=c(1,0), pch=c(-5,1), legend=c("RobPer*var(y)*n/2", "spec.pgram"))
+# Due to different ways of computation, the scaled periodograms are not exactly
+# identical, but show very similar behavior
+
+plot(PP_konv$freq, PP_new, type="l", col='red', xlim=c(0,0.15))
+
+PP_new <- RobPer(ts=data.frame(Age=stsl_df$Age, SL=stsl_df$SL.dtrnd25WAvg), weighting=FALSE, periods=1/PP_konv$freq,
+    regression="L2", 
+    model="sine")
+plot(PP_konv$freq, PP_new*var(stsl_df$SL.dtrnd25WAvg)*n/2, 
+     type="l", col='red', xlim=c(0,0.15),
+     xlab='frequency(cycles/Myr)',
+     ylab='spectrum')
+abline(v=1/91)
+abline(v=1/36)
+
+
+# BChron
+## Not run:
+# Data from Glendalough
+data(Glendalough)
+# Run in Bchronology - all but first age uses intcal13
+GlenOut = Bchronology(ages=Glendalough$ages,
+                      ageSds=Glendalough$ageSds,
+                      calCurves=Glendalough$calCurves,
+                      positions=Glendalough$position,
+                      positionThicknesses=Glendalough$thickness,
+                      ids=Glendalough$id,
+                      predictPositions=seq(0,1500,by=10))
+# Summarise it a few different ways
+summary(GlenOut) # Default is for quantiles of ages at predictPosition values
+summary(GlenOut, type='convergence') # Check model convergence
+summary(GlenOut, type='outliers') # Look at outlier probabilities
+# Predict for some new positions
+predictAges = predict(GlenOut, newPositions = c(150,725,1500), newPositionThicknesses=c(5,0,20))
+# Plot the output
+plot(GlenOut,main="Glendalough",xlab='Age (cal years BP)',ylab='Depth (cm)',las=1)
+## End(Not run)
+
+## Not run:
+# Read in some data from Sluggan Moss
+data(Sluggan)
+# Run the model
+SlugDens = BchronDensity(ages=Sluggan$ages,
+                         ageSds=Sluggan$ageSds,
+                         calCurves=Sluggan$calCurves)
+# plot it
+plot(SlugDens)
+## End(Not run)
+
+## Not run:
+# Load in data
+data(TestChronData)
+data(TestRSLData)
+# Run through Bchronology
+RSLrun = Bchronology(ages=TestChronData$ages,
+                     ageSds=TestChronData$ageSds,
+                     positions=TestChronData$position,
+                     positionThicknesses=TestChronData$thickness,
+                     ids=TestChronData$id,
+                     calCurves=TestChronData$calCurves,
+                     predictPositions=TestRSLData$Depth)
+
+# Now run through BchronRSL
+RSLrun2 = BchronRSL(RSLrun,RSLmean=TestRSLData$RSL,RSLsd=TestRSLData$Sigma,degree=3)
+# Summarise it
+summary(RSLrun2)
+# Plot it
+plot(RSLrun2)
+## End(Not run)
