@@ -474,7 +474,7 @@ BTSpec <- auspec(y, lag=length(y)*1/3)
 
 lag = as.numeric(1/3)
 
-spec.BT <- function(y, lag=1/3, x_limit=c(0,0.5), plot=TRUE) {
+spec.BT <- function(y, dt, lag=1/3, x_limit=c(0,0.5), plot=TRUE, unit="") {
   x <- as.numeric(length(y) * lag)
   lagno = round(x)
 
@@ -532,20 +532,25 @@ spec.BT <- function(y, lag=1/3, x_limit=c(0,0.5), plot=TRUE) {
   p = p/sd(p)
 
   # plot the results
-  dt = t[2] - t[1]
+  if(!exists("t")) {
+    stop("Please provide sampling interval dt.")
+  }
   fNyquist = 0.5/(dt)
   f = seq(0, fNyquist,length.out = floor(lagno/2.0 + 1))
   N = length(f)
-  if (plot)
+  if (plot)  {
+    if (unit != "")
+      xlab = paste('frequency (1 / ', unit, ")", sep="")
     plot(f, p[1:N], t='l', xlim=x_limit, 
-     ylab='spectral power', xlab = 'frequency')
+     ylab='spectral power', xlab = xlab)
+  }
   
   res <- list(freq=f, spec=p[1:N])
   
   return(res)
 }
 
-spec.BT(y, x_limit = c(0,0.06))
+spec.BT(y, dt = 0.05, x_limit = c(0,0.06), unit="Kyr")
 
 
 # Blackman tukey from btpsd

@@ -8,7 +8,7 @@ data_dir <- ('/Users/andy/Dropbox/TSCreator/TSCreator development/Developers/And
 fn_50 <- paste(data_dir, 'event_frequency_per_50_yr_dat.txt', sep='')
 ev_f_50 <- read.csv(fn_50, sep=' ')
 
-time_interval <- 5
+time_interval <- 2.25
 ev_f_50 <- subset(ev_f_50, ev_f_50$ages_50 <= time_interval)
 
 eva <- ev_f_50$ages_50
@@ -79,7 +79,6 @@ abline(h=0, lty=2)
 ev.fft <- fft(ev.tap)
 
 
-
 # Calculate Amplitude
 Amp <- Mod(ev.fft)
 
@@ -137,13 +136,12 @@ mtext(side=1, padj = 1, text=round(period[idx],2), at=freq[idx])
 
 evt <- ts(ev, start=0.04, frequency=20, deltat=5)
 s <- spec.mtm(ts(ev), demean=FALSE, detrend=FALSE, nw = 1, k=1)
-s$
-  , 
-              sineSmoothFact = 0.02,
-              xlab='Year', 
-              ylab='Relative Power Spectra [Amplitude]^2',
-              main='Spectral analysis using multitaper method',
-              Ftest = TRUE)
+  # , 
+  #             sineSmoothFact = 0.02,
+  #             xlab='Year', 
+  #             ylab='Relative Power Spectra [Amplitude]^2',
+  #             main='Spectral analysis using multitaper method',
+  #             Ftest = TRUE)
 idx <- seq(0,4,by=1)
 axis(side=1, at=idx, labels=FALSE)
 p_idx <- seq(1, length(period), by=5)
@@ -155,7 +153,7 @@ mtext(side=1, padj = 1, text=round(period[p_idx],2), at=idx)
 
 
 #CC <- ts(ev, start=0, end=12, frequency=10)  # 1000/100 = 10
-CC <- ts(ev, start=0, end=1, frequency=12)  # 12000/100 = 120
+CC <- ts(ev.tap, start=0, end=1, frequency=12)  # 5000/100 = 50
 par(mfrow=c(1,2))
 P1 <- spec.pgram(CC,log='no',taper=0,pad=0,fast=FALSE,demean=TRUE,detrend=FALSE, xlab="Frequency(1/Ky)") 
 
@@ -196,6 +194,13 @@ legend('topleft', legend=hm_l, col = c(1, 2, 3, 4, 5, 6,'darkblue'),
 
 Xspec<- spec.pgram(ev.tap, log='no', lwd=2)
 
+BTspec <- spec.BT(ev.tap, plot=FALSE)
+plot(BTspec$freq, BTspec$spec, t='l', lwd=2)
+df <- data.frame(freq=BTspec$freq, spec=BTspec$spec)
+df <- df[order(df$spec, decreasing=T),]
+df$period <- (1/df$freq)*1000
+df
+
 library(multitaper)
 Mspec <- spec.mtm(ev.tap, deltat=1/100,
                   nw = 4, k = 7,
@@ -217,4 +222,11 @@ hm_l <- paste(hm, ' cycles')
 hm_l <- c(hm_l, 'combined cycle')
 legend('topright', legend=hm_l, col = c('blue','green','red','darkblue'),
        lty = rep(1,4), cex=0.40)
+
+
+# multitaper analysis
+dat <- data.frame(t=eva[2:(nr-1)], e=ev.tap)
+dat2 <- resample(dat, seq(0.05, 10, by = 0.05))
+
+eha(dat2,win=8,pad=1000, step=1, output=6)
 

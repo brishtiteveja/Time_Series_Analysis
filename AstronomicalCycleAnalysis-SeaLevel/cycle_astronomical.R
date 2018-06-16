@@ -8,6 +8,7 @@ library(readxl)
 dfxl <- read_excel(dp_fname)
 
 #Long-Term Phanerozoic (SEPM98-Haq'08) data
+#Long-Term Phanerozoic (SEPM98-Haq'08) data
 # ages
 lta <- as.numeric(dfxl$`1.3`[25253:26029])
 # sea level
@@ -44,11 +45,17 @@ points(stsl_df$Age, stsl_df$SL, cex=0.15)
 # Rolling average
 s <- stsl_df$SL
 n <- length(s)
-for (k in 5:6) {
+roll_avg <- c(1, 0.5, 2.5, 5, 10, 25, 50)
+roll_n <- length(roll_avg)
+for (k in roll_size) {
   N <- k
-  x <- na.omit(stats::filter(s, sides=2, rep(0.25,N)))
-  lines(x, col='red', lty=2)
+  x <- na.omit(stats::filter(s, sides=2, rep(1,N)/N))
+  if (k != 1)
+    lines(x, col=k, lty=2)
+  else
+    plot(x, col=k, lty=1, lwd=2)
 }
+legend('topleft', legend = paste(roll_size, 'Myr'), col=roll_size, lty=c(1, rep(2, roll_n-1)) , cex=0.5)
 
 # loess fit
 model.loess <- loess(SL~Age, data = stsl_df) #, family='symmetric')
@@ -71,6 +78,7 @@ plot(stsl_df$Age, stsl_df$SL.dtrnd25WAvg, t='l')
 # 36 Myr
 df <- data.frame(Age=stsl_df$Age, SL.25Avg=stsl_df$SL.dtrnd25WAvg)
 dtmin <- min(abs(diff(df$Age)))
+library(astrochron)
 slInterp = linterp(df)
 
 freq <- 0.028 # 1/36Myr
@@ -136,6 +144,7 @@ stsl_df$SL.demeaned <- stsl_df$SL - mean(stsl_df$SL)
 lm.fit <- lm(SL.demeaned~Age, data=stsl_df)
 #detrended SL
 stsl_df$SL.detrended <- lm.fit$residuals
+par(mfrow=c(1,1))
 plot(stsl_df$Age, stsl_df$SL.detrended, t='l')
 
 #detrending using Astrochron
@@ -157,13 +166,14 @@ plot_ly(stsl_df, x=~Age, y=~SL,
         x=fit.lowess$x, 
         y=fit.lowess$y,
         mode='lines',
+        name='25% weighted average',
         line=list(color='rgb(255,0,0)')) %>%
     add_lines(
         x=stsl_df$Age, 
         y=fit.poly$fitted.values,
+        name='6-degree poly fit',
         mode='lines',
         line=list(color='rgb(0,255,0)')) 
-
 
 
 # Using my own fft
@@ -367,7 +377,7 @@ plot(ARSpec$freq, ARSpec$spec)
 
 
 # Vostok data
-setwd("~/Dropbox/TSCreator/TSCreator development/Developers/Andy/Projects/ML-Data Mining/SpectralAnalysis/ETC/Data")
+setwd("~/Dropbox/TSCreator/TSCreator development/Developers/Andy/Projects/ML-Data Mining/SpectralAnalysis/AstronomicalCycleAnalysis-SeaLevel/Data")
 library(readxl)
 fxl <- read_excel('vostok_dD.xls')
 c1 <- fxl$`Site Name: Vostok` 
@@ -386,7 +396,7 @@ plot(age, delta_Dt, xlab = 'age (kyr)', ylab = 'D(%)', t='l', main = 'Deuterium 
 
 # filtered delta_Dt
 nF <- 80
-delta_Dt.filt = filter(delta_Dt, rep(1/nF,nF))
+delta_Dt.filt = stats::filter(delta_Dt, rep(1/nF,nF))
 idx <- !(is.na(delta_Dt.filt))
 delta_Dt.filt = delta_Dt.filt[!is.na(delta_Dt.filt)]
 plot(age[idx], delta_Dt.filt, xlab = 'age (kyr)', ylab = 'D(%)', t='l', main = 'Deuterium record from Vostok ice.')
@@ -434,4 +444,5 @@ plot(psppa$x.x, psppa$y.y, lty=2, type='l',
 
 # Blackman tukey
 ?auspec
+library(timsac)
 auspec(delta_Dt.filt, lag=1/3)
