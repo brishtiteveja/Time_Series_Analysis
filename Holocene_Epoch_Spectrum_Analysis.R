@@ -139,6 +139,76 @@ for (ct in column_type) {
   columns[[ct]] <- cols
 }
 
+get_main_region_name <- function(col_name) {
+  if (col_name %in% regional_columns) {
+    return(col_name)
+  } else {
+    for(region in regional_columns) {
+      # number of sub-regions
+      sub_region_num <- length(regional_column_list[[region]])
+      if (sub_region_num == 0)
+        next
+      sub_regions <- names(regional_column_list[[region]][1:sub_region_num])
+      if (col_name %in% sub_regions)
+        return(region)
+      else {
+        for(sub_region_n in sub_regions) {
+          sub_region <- regional_column_list[[region]][[sub_region_n]]
+          sub_sub_regions <- names(sub_region)
+          sub_sub_region_num <- length(sub_sub_regions)
+          if (sub_sub_region_num == 0)
+            next
+          if (col_name %in% sub_sub_regions)
+            return(region)
+          
+          for(sub_sub_region_n in sub_sub_regions) {
+            sub_sub_sub_regions <- regional_column_list[[region]][[sub_region_n]][[sub_sub_region_n]]
+            sub_sub_sub_region_num <- length(sub_sub_sub_regions)
+            if (sub_sub_sub_region_num == 0)
+              next
+            if (col_name %in% sub_sub_sub_regions)
+              return(region)
+          }
+        }
+      }
+    }
+  }
+  
+  return(NA)
+}
+
+
+not_column <- function(col_name) {
+  if (col_name == '_METACOLUMN_OFF')
+    return(TRUE)
+  else if (col_name == 'off' || col_name == 'on') {
+    return(TRUE)
+  } else {
+    # # column width
+    m <- regexec("^[0-9]+$",col_name)
+    ml <- regmatches(col_name, m)
+    if (length(ml[[1]]) == 1) {
+      return(TRUE)
+    }
+    
+    # color code
+    m <- regexec("([0-9])+/([0-9])+/([0-9])+",col_name)
+    ml <- regmatches(col_name, m)
+    
+    if (length(ml[[1]]) != 0) {
+      return(TRUE)  
+    }
+    
+    return(FALSE)
+  }
+}
+
+# Regional Columns
+regional_columns <- c('Africa', 'Eastern Mediterranean', 'Middle East to India',
+                      'East Asia and Oceania', 'Europe', 'Arctic and Subarctic',
+                      'Northwest and Canada', 'North America', 'Middle America',
+                      'South America')
+
 regional_column_list <- list()
 
 region_info_rows <- which(dfxl[[c[2]]] == ':')
@@ -199,74 +269,6 @@ for (r in region_info_rows) {
   regional_column_list[[region]] <- sub_regions
 }
 
-get_main_region_name <- function(col_name) {
-  if (col_name %in% regional_columns) {
-    return(col_name)
-  } else {
-    for(region in regional_columns) {
-      # number of sub-regions
-      sub_region_num <- length(regional_column_list[[region]])
-      if (sub_region_num == 0)
-        next
-      sub_regions <- names(regional_column_list[[region]][1:sub_region_num])
-      if (col_name %in% sub_regions)
-        return(region)
-      else {
-        for(sub_region_n in sub_regions) {
-          sub_region <- regional_column_list[[region]][[sub_region_n]]
-          sub_sub_regions <- names(sub_region)
-          sub_sub_region_num <- length(sub_sub_regions)
-          if (sub_sub_region_num == 0)
-            next
-          if (col_name %in% sub_sub_regions)
-            return(region)
-          
-          for(sub_sub_region_n in sub_sub_regions) {
-            sub_sub_sub_regions <- regional_column_list[[region]][[sub_region_n]][[sub_sub_region_n]]
-            sub_sub_sub_region_num <- length(sub_sub_sub_regions)
-            if (sub_sub_sub_region_num == 0)
-              next
-            if (col_name %in% sub_sub_sub_regions)
-              return(region)
-          }
-        }
-      }
-    }
-  }
-  
-  return(NA)
-}
-
-# Regional Columns
-regional_columns <- c('Africa', 'Eastern Mediterranean', 'Middle East to India',
-                      'East Asia and Oceania', 'Europe', 'Arctic and Subarctic',
-                      'Northwest and Canada', 'North America', 'Middle America',
-                      'South America')
-
-not_column <- function(col_name) {
-  if (col_name == '_METACOLUMN_OFF')
-    return(TRUE)
-  else if (col_name == 'off' || col_name == 'on') {
-    return(TRUE)
-  } else {
-    # # column width
-    m <- regexec("^[0-9]+$",col_name)
-    ml <- regmatches(col_name, m)
-    if (length(ml[[1]]) == 1) {
-      return(TRUE)
-    }
-    
-    # color code
-    m <- regexec("([0-9])+/([0-9])+/([0-9])+",col_name)
-    ml <- regmatches(col_name, m)
-    
-    if (length(ml[[1]]) != 0) {
-      return(TRUE)  
-    }
-    
-    return(FALSE)
-  }
-}
 
 # Get column wise event numbers
 dir <- proj_dir 
@@ -276,6 +278,7 @@ event_names_by_col <- list()
 ev_df_by_col <- list()
 events_by_col_by_regions <- list()
 event_names_by_col_by_regions <- list()
+ev_df_by_regions <- list()
 ev_df_by_col_by_regions <- list()
 for(col_type in column_type) {
   msg <- paste("Processing ", col_type, " column events.\n",
@@ -335,7 +338,7 @@ for(col_type in column_type) {
           # adding to the region 
           col_region <- get_main_region_name(col$name)
           if(is.na(col_region)) {
-            print(paste("Something is wrong with column ", col, " for region ", col_region, sep=""))
+            #print(paste("Something is wrong with column ", col, " for region ", col_region, sep=""))
           } else {
             evs_by_regions[[col_region]] <- as.numeric(evs_by_regions[[col_region]]) + 1
             ev_names_by_regions[[col_region]] <- c(ev_names_by_regions[[col_region]], n)
@@ -361,13 +364,6 @@ for(col_type in column_type) {
   age <- as.numeric(names(events))
   freq <- as.numeric(unlist(events))
   ev_df <- data.frame(age = age, freq = freq)
-  
-  ev_df_by_regions[[col_type]] <- list()
-  for (region in regional_columns) {
-    age <- as.numeric(names(events_by_regions[[col_type]][[region]]))
-    freq <- as.numeric(unlist(events_by_regions[[col_type]][[region]]))
-    ev_df_by_regions[[col_type]][[region]] <- data.frame(age = age, freq = freq)
-  }
  
   msg <- paste("Saving age vs frequency plot.")
   print(msg)
@@ -421,16 +417,26 @@ for(col_type in column_type) {
   
   events_by_col_by_regions[[col_type]] <- list()
   event_names_by_col_by_regions[[col_type]] <- list()
-  ev_df_by_col_by_regions[[col_type]] <- list()
-  
-  for(region in regional_columns) {
-    events_by_col_by_regions[[col_type]][[region]] <- events_by_regions[[col_type]][[region]] 
-    event_names_by_col_by_regions[[col_type]][[region]] <- event_names_by_regions[[col_type]][[region]]
-    ev_df_by_col_by_regions[[col_type]][[region]] <- ev_df_by_regions[[col_type]][[region]]
+  ev_df_by_regions[[col_type]] <- list()
+  for (region in regional_columns) {
+    age_r <- c()
+    freq_r <- c()
+    events_r <- c()
+    event_names_r <- list()
+    for(age in names(events_by_regions)) {
+      events_r <- c(events_r, events_by_regions[[age]][[region]])
+      event_names_r[[age]] <- event_names_by_regions[[age]][[region]]
+      age_r <- c(age_r, as.numeric(age))
+      freq_r <- c(freq_r, as.numeric(events_by_regions[[age]][[region]]))
+    }
+    events_by_col_by_regions[[col_type]][[region]] <- events_r
+    event_names_by_col_by_regions[[col_type]][[region]] <- event_names_r
+    ev_df_by_regions[[col_type]][[region]] <- data.frame(age = age_r, freq = freq_r)
   }
 }
 
-events_by_regions_mat <- matrix(unlist(events_by_regions), byrow = TRUE, 
+ev_c_r <- events_by_col_by_regions[['block']]
+events_by_regions_mat <- matrix(unlist(ev_c_r), byrow = FALSE, 
        nrow=length(names(events_by_regions)), 
        ncol=length(regional_columns), 
        dimnames=list(names(events_by_regions), regional_columns))
