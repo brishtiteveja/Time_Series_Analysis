@@ -17,7 +17,7 @@ c <- colnames(dfxl) # column header
 df2c <- dfxl[[c[2]]] # second column
 
 STARTING_AGE <- 0 + 0.000001
-ENDING_AGE <- 12005/1000 # 2Ka
+ENDING_AGE <- 2005/1000 # 2Ka
 AGE_SLIDE <- 50/1000 # 50 yr
 
 # second column
@@ -159,12 +159,38 @@ for (r in region_info_rows) {
       
       # Get sub sub region row number
       sr <- which(dfxl[[c[1]]] == sub_region_n)
-      sub_sub_regions <- list()
+      if (length(sr) == 0 && dfxl[[c[2]]][sr] != ":") {
+        sub_regions[[sub_region_n]] <- list(sub_region_n)
+        next
+      } else {
+        sub_sub_regions <- list()
+      }
+      
       for (src in c[3:12]) {
         sub_sub_region_n <- dfxl[[src]][sr]
         if(!is.null(sub_sub_region_n) && !is.na(sub_sub_region_n) &&
            !not_column(sub_sub_region_n)) {
-          sub_sub_regions <- c(sub_sub_regions, sub_sub_region_n) 
+          sub_sub_regions[[sub_sub_region_n]] <- list()
+          
+          # Get sub sub sub region row number
+          ssr <- which(dfxl[[c[1]]] == sub_sub_region_n)
+          if (length(ssr) == 0 || dfxl[[c[2]]][ssr] != ":") {
+            sub_sub_regions[[sub_sub_region_n]] <- list(sub_sub_region_n)
+            next
+          } else {
+            sub_sub_sub_regions <- list()
+          }
+          
+          for(ssrc in c[3:12]) {
+            sub_sub_sub_region_n <- dfxl[[ssrc]][ssr]
+            if (!is.null(sub_sub_sub_region_n) && !is.na(sub_sub_sub_region_n) &&
+                !not_column((sub_sub_sub_region_n))) {
+              # Assuming there's no more level
+              sub_sub_sub_regions[[sub_sub_sub_region_n]] <- sub_sub_sub_region_n
+            }
+          }
+          
+          sub_sub_regions[[sub_sub_region_n]] <- sub_sub_sub_regions
         }
       }
       sub_regions[[sub_region_n]] <- sub_sub_regions
@@ -188,12 +214,21 @@ get_main_region_name <- function(col_name) {
       else {
         for(sub_region_n in sub_regions) {
           sub_region <- regional_column_list[[region]][[sub_region_n]]
-          sub_sub_regions <- unlist(sub_region)
+          sub_sub_regions <- names(sub_region)
           sub_sub_region_num <- length(sub_sub_regions)
           if (sub_sub_region_num == 0)
             next
           if (col_name %in% sub_sub_regions)
             return(region)
+          
+          for(sub_sub_region_n in sub_sub_regions) {
+            sub_sub_sub_regions <- regional_column_list[[region]][[sub_region_n]][[sub_sub_region_n]]
+            sub_sub_sub_region_num <- length(sub_sub_sub_regions)
+            if (sub_sub_sub_region_num == 0)
+              next
+            if (col_name %in% sub_sub_sub_regions)
+              return(region)
+          }
         }
       }
     }
@@ -202,12 +237,46 @@ get_main_region_name <- function(col_name) {
   return(NA)
 }
 
+# Regional Columns
+regional_columns <- c('Africa', 'Eastern Mediterranean', 'Middle East to India',
+                      'East Asia and Oceania', 'Europe', 'Arctic and Subarctic',
+                      'Northwest and Canada', 'North America', 'Middle America',
+                      'South America')
+
+not_column <- function(col_name) {
+  if (col_name == '_METACOLUMN_OFF')
+    return(TRUE)
+  else if (col_name == 'off' || col_name == 'on') {
+    return(TRUE)
+  } else {
+    # # column width
+    m <- regexec("^[0-9]+$",col_name)
+    ml <- regmatches(col_name, m)
+    if (length(ml[[1]]) == 1) {
+      return(TRUE)
+    }
+    
+    # color code
+    m <- regexec("([0-9])+/([0-9])+/([0-9])+",col_name)
+    ml <- regmatches(col_name, m)
+    
+    if (length(ml[[1]]) != 0) {
+      return(TRUE)  
+    }
+    
+    return(FALSE)
+  }
+}
+
 # Get column wise event numbers
 dir <- proj_dir 
 
 events_by_col <- list()
 event_names_by_col <- list()
 ev_df_by_col <- list()
+events_by_col_by_regions <- list()
+event_names_by_col_by_regions <- list()
+ev_df_by_col_by_regions <- list()
 for(col_type in column_type) {
   msg <- paste("Processing ", col_type, " column events.\n",
                "----------------------------------------------------------------------",
@@ -230,6 +299,8 @@ for(col_type in column_type) {
   events <- list()
   event_names <- list()
   event_types <- list()
+  events_by_regions <- list()
+  event_names_by_regions <- list()
   
   while(start_age <= end_age) {
     next_age <- start_age + age_diff
@@ -239,6 +310,14 @@ for(col_type in column_type) {
     evs <- 0
     ev_names <- c()
     ev_types <- c()
+    
+    # region wise event numbers
+    evs_by_regions <- list()
+    ev_names_by_regions <- list()
+    for(region in regional_columns) {
+      evs_by_regions[[region]] <- 0
+      ev_names_by_regions[[region]] <- c()
+    }
     
     for(col in columns[[col_type]]){
       cn <- length(col$content$age)
@@ -252,6 +331,15 @@ for(col_type in column_type) {
           evs <- as.numeric(evs) + 1
           ev_names <- c(ev_names, n)
           ev_types <- c(ev_types, t)
+        
+          # adding to the region 
+          col_region <- get_main_region_name(col$name)
+          if(is.na(col_region)) {
+            print(paste("Something is wrong with column ", col, " for region ", col_region, sep=""))
+          } else {
+            evs_by_regions[[col_region]] <- as.numeric(evs_by_regions[[col_region]]) + 1
+            ev_names_by_regions[[col_region]] <- c(ev_names_by_regions[[col_region]], n)
+          }
         }
         k <- k+1
       }
@@ -260,12 +348,26 @@ for(col_type in column_type) {
     event_names[[key]] <- ev_names
     if(col_type == 'event')
       event_types[[key]] <- ev_types
+    
+    events_by_regions[[key]] <- list()
+    event_names_by_regions[[key]] <- list()
+    for (region in regional_columns) {
+      events_by_regions[[key]][[region]] <- evs_by_regions[[region]]
+      event_names_by_regions[[key]][[region]] <- ev_names_by_regions[[region]]
+    }
     start_age <- next_age
   }
   
   age <- as.numeric(names(events))
   freq <- as.numeric(unlist(events))
   ev_df <- data.frame(age = age, freq = freq)
+  
+  ev_df_by_regions[[col_type]] <- list()
+  for (region in regional_columns) {
+    age <- as.numeric(names(events_by_regions[[col_type]][[region]]))
+    freq <- as.numeric(unlist(events_by_regions[[col_type]][[region]]))
+    ev_df_by_regions[[col_type]][[region]] <- data.frame(age = age, freq = freq)
+  }
  
   msg <- paste("Saving age vs frequency plot.")
   print(msg)
@@ -316,39 +418,65 @@ for(col_type in column_type) {
   event_names_by_col[[col_type]] <- event_names
   events_by_col[[col_type]] <- events
   ev_df_by_col[[col_type]] <- ev_df
-}
-
-# Regional Columns
-regional_columns <- c('Africa', 'Eastern Mediterranean', 'Middle East to India',
-                      'East Asia and Oceania', 'Europe', 'Arctic and Subarctic',
-                      'Northwest and Canada', 'North America', 'Middle America',
-                      'South America')
-
-not_column <- function(col_name) {
-  if (col_name == '_METACOLUMN_OFF')
-    return(TRUE)
-  else if (col_name == 'off' || col_name == 'on') {
-    return(TRUE)
-  } else {
-    # # column width
-    m <- regexec("^[0-9]+$",col_name)
-    ml <- regmatches(col_name, m)
-    if (length(ml[[1]]) == 1) {
-      return(TRUE)
-    }
-
-    # color code
-    m <- regexec("([0-9])+/([0-9])+/([0-9])+",col_name)
-    ml <- regmatches(col_name, m)
-    
-    if (length(ml[[1]]) != 0) {
-      return(TRUE)  
-    }
-    
-    return(FALSE)
+  
+  events_by_col_by_regions[[col_type]] <- list()
+  event_names_by_col_by_regions[[col_type]] <- list()
+  ev_df_by_col_by_regions[[col_type]] <- list()
+  
+  for(region in regional_columns) {
+    events_by_col_by_regions[[col_type]][[region]] <- events_by_regions[[col_type]][[region]] 
+    event_names_by_col_by_regions[[col_type]][[region]] <- event_names_by_regions[[col_type]][[region]]
+    ev_df_by_col_by_regions[[col_type]][[region]] <- ev_df_by_regions[[col_type]][[region]]
   }
 }
 
+events_by_regions_mat <- matrix(unlist(events_by_regions), byrow = TRUE, 
+       nrow=length(names(events_by_regions)), 
+       ncol=length(regional_columns), 
+       dimnames=list(names(events_by_regions), regional_columns))
+
+head(events_by_regions_mat)
+
+m <- data.frame(events_by_regions_mat)
+m$DominantRegion <- as.integer(apply(m, 1,which.max))
+# principal component analysis
+# another example using the iris
+ncol <- ncol(m)
+
+kpc <- kpca(~.,data=m[,1:(ncol-1)], #iris[-test, -5],
+            kernel="rbfdot",
+            kpar=list(sigma=0.2),features=2)
+
+#print the principal component vectors
+pcv(kpc)
+
+#plot the data projection on the components
+par(mar=c(4,4,4,12))
+
+x <- as.double(rotated(kpc)[,1])
+y <- as.double(rotated(kpc)[,2])
+
+par(xpd=FALSE)
+plot(x, y, 
+     #type='n',
+     col=as.integer(m[,ncol]), 
+     pch=as.integer(m[,ncol]),
+     xlab="1st Principal Component",ylab="2nd Principal Component")
+arrows(0, 0, x, y, lty=1, lwd=0.5,
+       col=as.integer(m[,ncol]))
+abline(h=0, lty=2)
+abline(v=0, lty=2)
+
+par(xpd=TRUE)
+legend(4.725, 2.5, 
+       legend = as.character(regional_columns), 
+       col=1:10,
+       pch=1:10)
+par(xpd=FALSE)
+
+#embed remaining points 
+#emb <- predict(kpc,iris[test,-5])
+#points(emb,col=as.integer(iris[test,5]))
 
 # Number of events every 50 year
 #data_dir <- ('/Users/andy/Dropbox/TSCreator/TSCreator development/Developers/Andy/Projects/ML-Data Mining/programming/')
@@ -385,7 +513,7 @@ plot(eva, ev.dm, xlab='Age(Ka)',
      ylab='Number of Events', type='p', cex=0.25, col='blue', lwd=2,
      main='Demeaned Event Number Data', ylim=c(-10,40)
 )
-lines(ev_f_50$ages_50, ev.dm, col='blue')
+lines(eva, ev.dm, col='blue')
 abline(h=0, lty=2, col='blue')
 
 hanning_ma <- function(df, n) {
@@ -402,7 +530,7 @@ for (n in 2:(nr-1)) {
   ev.filt <- c(ev.filt, h)
 }
 
-nr <- length(ev_f_50$ages_50)
+nr <- length(ev_f$ages)
 plot(eva[2:(nr-1)], ev.filt, t='l', col='black', lwd=2)
 abline(h=0, lty=2, col='black')
 
@@ -499,6 +627,8 @@ mtext(side=1, padj = 1, text=round(period[idx],2), at=freq[idx])
 
 
 evt <- ts(ev, start=0.04, frequency=20, deltat=5)
+library(psd)
+library(multitaper)
 s <- spec.mtm(ts(ev), demean=FALSE, detrend=FALSE, nw = 1, k=1)
   # , 
   #             sineSmoothFact = 0.02,
