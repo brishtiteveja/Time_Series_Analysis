@@ -445,6 +445,8 @@ head(events_by_regions_mat)
 
 m <- data.frame(events_by_regions_mat)
 m$DominantRegion <- as.integer(apply(m, 1,which.max))
+head(m)
+
 # principal component analysis
 # another example using the iris
 ncol <- ncol(m)
