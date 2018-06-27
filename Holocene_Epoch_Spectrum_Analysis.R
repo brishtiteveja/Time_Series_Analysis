@@ -18,7 +18,7 @@ df2c <- dfxl[[c[2]]] # second column
 
 STARTING_AGE <- 0 + 0.000001
 ENDING_AGE <- 2005/1000 # 2Ka
-AGE_SLIDE <- 50/1000 # 50 yr
+AGE_SLIDE <- 25/1000 # 50 yr
 
 # second column
 c <- list()
@@ -450,7 +450,7 @@ head(m)
 # principal component analysis
 # another example using the iris
 ncol <- ncol(m)
-
+library(kernlab)
 kpc <- kpca(~.,data=m[,1:(ncol-1)], #iris[-test, -5],
             kernel="rbfdot",
             kpar=list(sigma=0.2),features=2)
@@ -578,7 +578,6 @@ abline(h=0, lty=2)
 # FFT
 ev.fft <- fft(ev.tap)
 
-
 # Calculate Amplitude
 Amp <- Mod(ev.fft)
 
@@ -596,7 +595,7 @@ for (n in 2:(nr-1)) {
   PowerSpec.han <- c(PowerSpec.han, h)
 }
 
-t <- as.numeric(ev_f_50$ages_50)
+t <- as.numeric(ev_f$ages)
 window_width <- max(t) - min(t)
 freq <- 1:(length(PowerSpec)-2)
 period <- window_width/freq 
@@ -606,21 +605,22 @@ RelPowerSpec <- PowerSpec.han/TotPowerSpec
 
 # Charts of Wavenumber vs. Smoothed Power 
 plot(freq, PowerSpec.han, t='l', 
-     xlab='Frequency (Cycles / 5Ka)', 
+     xlab='Frequency (Cycles / 2Ka)', 
      ylab='Power Spectra [Amplitude]^2',
      lwd=2
 )
 
 plot(period*1000, PowerSpec.han, t='l', 
      xlab='Time (Yr)', 
-     ylab='Power Spectra [Amplitude]^2',
+     ylab='Power',
      xlim=c(0,1000),
-     lwd=2
+     lwd=2,
+     main="Spectral Power vs Period"
 )
-abline(v=250,lty=2)
-abline(v=490, lty=2)
-abline(v=205, lty=3)
-abline(v=170, lty=3)
+periodl <- c(400, 154, 250, 333.33, 100, 166.67)
+abline(v=periodl, lty=2, col=2:7)
+periodl <- paste(periodl, 'yr')
+legend('topright', legend=periodl, lty=2, col=2:7)
 
 # )Wavelength vs. Relative Power Spectra
 plot(RelPowerSpec, t='l', 
@@ -633,11 +633,134 @@ idx <- seq(1,max(freq),by=12)
 axis(side=1, at=idx, labels=FALSE)
 mtext(side=1, padj = 1, text=round(period[idx],2), at=freq[idx])
 
+# Use the custom frequency spectrum
+# on the real data
+plot.spectrum(ev)
+# on the demeaned data
+plot.spectrum(ev.dm, power=TRUE, xlab='Frequency(cycles/2ka)', 
+              main = 'Spectral power vs frequency on demeaned event data')
+# on the hanning filtered data
+plot.spectrum(ev.filt, power=TRUE, xlab='Frequency(cycles/2ka)',
+              main = 'Spectral power vs frequency on demeaned and filtered event data')
+# on the detrended data
+plot.spectrum(ev.dtrend, power=TRUE, xlab='Frequency(cycles/2ka)',
+              main = 'Spectral power vs frequency on detrended event data')
+# on the tapered data
+plot.spectrum(ev.tap, power=TRUE, xlab='Frequency(cycles/2ka)',
+              main = 'Spectral power vs frequency on detrended and tapered event data')
+
+# smooth the psd
+res <- plot.spectrum(ev.tap, power=TRUE, smoothing=TRUE,
+             xlab='Frequency(cycles/2ka)',
+             main = 'Smoothed Spectral power vs frequency')
+
+
+time_window <- max(ev_f$ages) - min(ev_f$ages)
+N <- length(ev.tap)
+res$period <- (time_window / (res$freq * N)) * 1000
+head(res, 10)
+
+plot(period*1000, PowerSpec.han, t='l', 
+     xlab='Time (Yr)', 
+     ylab='Power',
+     xlim=c(0,1000),
+     lwd=2,
+     main="Spectral Power vs Period"
+)
+periodl <- c(400, 154, 250, 333.33, 100, 166.67)
+abline(v=periodl, lty=2, col=2:7)
+periodl <- paste(periodl, 'yr')
+legend('topright', legend=periodl, lty=2, col=2:7)
+
+# freq       amp     power    period
+# 6  0.06329114 122.99625 158.83075  400.0000 Yes
+# 14 0.16455696 107.57012  99.50760  153.8462 Yes
+# 5  0.05063291 107.54739 131.11470  500.0000
+# 9  0.10126582  96.29151  63.44699  250.0000 Yes
+# 7  0.07594937  91.47636 104.76960  333.3333 Yes
+# 21 0.25316456  89.00611  56.19316  100.0000 Yes
+# 17 0.20253165  78.75561  42.57242  125.0000
+# 3  0.02531646  72.24159  45.31505 1000.0000
+# 19 0.22784810  67.90576  30.50830  111.1111 
+# 13 0.15189873  67.54380  66.50646  166.6667 Yes
+
+
+hm <- c(6, 14, 9, 7, 21, 13)
+# Reconstruct the plot with harmonics
+plot.show(ev.tap, plot.freq = TRUE, harmonics = hm, scale=10)
+legend('topright', legend=c(periodl, 'Combined', 'Event Number'), 
+       lty=1, col=c(2:7, 'darkblue', 'black'), cex=0.65)
+
+# Using periodogram
+Pspec<- spec.pgram(ev.tap, demean = TRUE, detrend = TRUE, taper = 0.1, log='no')
+par(new=T)
+plot(Pspec$freq, Pspec$spec, t='l', col='red', lty=2)
+dfPspec <- data.frame(Pspec)
+dfPspec <- dfPspec[order(dfPspec$spec, decreasing = T),]
+dfPspec$period <- (time_window / (dfPspec$freq * length(ev.tap))) * 1000
+head(df, n=10)
+#     freq     spec  taper    period
+# 5  0.0625 45.40252   0.1  405.0633
+# 4  0.0500 35.09184   0.1  506.3291
+# 14 0.1750 31.08893   0.1  144.6655
+# 8  0.1000 29.57111   0.1  253.1646
+# 20 0.2500 27.10280   0.1  101.2658
+# 6  0.0750 24.99689   0.1  337.5527
+# 2  0.0250 21.18668   0.1 1012.6582
+# 18 0.2250 19.44715   0.1  112.5176
+# 13 0.1625 17.98304   0.1  155.7936
+# 12 0.1500 12.35700   0.1  168.7764
+
+# Using blackman-tuckey
+BTspec <- spec.BT(ev.tap,dt = 1/50, lag=1/3, unit=' 2Ka')
+dfBTspec <- data.frame(BTspec) 
+dfBTspec <- dfBTspec[order(dfBTspec$spec, decreasing = T), ]
+dfBTspec$period <- (time_window / dfBTspec$freq) * 1000
+head(dfBTspec, n=10)
+
+#     # cycles       spec    period
+# 3   3.846154 2.81984692  520.0000
+# 2   1.923077 2.80302898 1040.0000
+# 5   7.692308 1.60448186  260.0000
+# 4   5.769231 0.86358185  346.6667
+# 6   9.615385 0.59535222  208.0000
+# 7  11.538462 0.46948344  173.3333
+# 1   0.000000 0.36902539       Inf
+# 8  13.461538 0.29816814  148.5714
+# 9  15.384615 0.09969757  130.0000
+# 10 17.307692 0.03152900  115.5556
+
+# Using psd 
+## Not run: #REX
+library(psd)
+##
+## Using prewhiten to improve spectral estimates
+##
+data(magnet)
+mts <- ts(magnet$clean)
+# add a slope
+mts.slope <- mts + seq_along(mts)
+# Prewhiten by removing mean+trend, and
+# AR model; fit truncates the series by
+# a few terms, so zero pad
+mts <- prewhiten(ldeaths - mean(ldeaths), AR.max=10, zero.pad="rear")
+mts.p <- mts[['prew_lm']]
+mts.par <- mts[['prew_ar']]
+# uniformly-tapered spectral estimates
+PSD <- psdcore(mts.p, ntaper=20)
+PSD.ar <- psdcore(mts.par, ntaper=20)
+# remove the effect of AR model
+PSD.ar[['spec']] <- PSD.ar[['spec']] / mean(PSD.ar[['spec']])
+PSD[['spec']] <- PSD[['spec']] / PSD.ar[['spec']]
+plot(PSD, log='no', lwd=2, ylim=c(-5,35))
+plot(PSD, log='dB', add=TRUE, lwd=2, col="red")
+plot(PSD.ar, log='no', add=TRUE, col="blue", lwd=2)
 
 evt <- ts(ev, start=0.04, frequency=20, deltat=5)
 library(psd)
 library(multitaper)
-s <- spec.mtm(ts(ev), demean=FALSE, detrend=FALSE, nw = 1, k=1)
+s <- spec.mtm(ts(ev), detrend= TRUE, nw=4, k=7)
+plot(s$freq, s$spec, t='l')
   # , 
   #             sineSmoothFact = 0.02,
   #             xlab='Year', 
@@ -649,9 +772,8 @@ axis(side=1, at=idx, labels=FALSE)
 p_idx <- seq(1, length(period), by=5)
 mtext(side=1, padj = 1, text=round(period[p_idx],2), at=idx)
 
-
-
 ### With spec.pgram --- ambiguous
+eha(data.frame(1:length(ldeaths), as.numeric(ldeaths)), tbw=3, win=1000, pad=1000)
 
 
 #CC <- ts(ev, start=0, end=12, frequency=10)  # 1000/100 = 10
@@ -675,7 +797,7 @@ abline(v=48, lty=2)
 
 par(mfrow=c(2,1))
 plot.frequency.spectrum(ev.fft, xlab='Cycles / 5Ka')
-
+plot.spectrum(X=ev.fft)
 
 amp <- Mod(ev.fft)
 N <- length(amp)
@@ -696,7 +818,7 @@ legend('topleft', legend=hm_l, col = c(1, 2, 3, 4, 5, 6,'darkblue'),
 
 Xspec<- spec.pgram(ev.tap, log='no', lwd=2)
 
-BTspec <- spec.BT(ev.tap, plot=FALSE)
+BTspec <- spec.BT(ev.tap, plot=FALSE, dt=0.025)
 plot(BTspec$freq, BTspec$spec, t='l', lwd=2)
 df <- data.frame(freq=BTspec$freq, spec=BTspec$spec)
 df <- df[order(df$spec, decreasing=T),]
@@ -704,7 +826,7 @@ df$period <- (1/df$freq)*1000
 df
 
 library(multitaper)
-Mspec <- spec.mtm(ev.tap, deltat=1/100,
+Mspec <- spec.mtm(ev.tap, deltat=0.025,
                   nw = 4, k = 7,
                   jackknife = TRUE, 
                   log='no', lwd=2)
@@ -716,10 +838,12 @@ x <- 0L:(N/2-1)
 d <- data.frame(x, a.h)
 d.sorted <- d[order(a.h, decreasing = TRUE),]
 head(Mspec$freq[d.sorted$x], 20)
+Mspec$period <- 1000/Mspec$freq
+head(Mspec$period[d.sorted$x], 20)
 
-hm <- c(13, 16, 6, 21, 6, 8)
+hm <- c(35, 17)
 plot.show(ev.tap, start_time = min(eva), time = max(eva) - min(eva), harmonics = hm,
-          xlab='Age (Ka)', ylab='', scale=0.5)
+          xlab='Age (Ka)', ylab='', scale=1)
 hm_l <- paste(hm, ' cycles')
 hm_l <- c(hm_l, 'combined cycle')
 legend('topright', legend=hm_l, col = c('blue','green','red','darkblue'),
@@ -727,8 +851,10 @@ legend('topright', legend=hm_l, col = c('blue','green','red','darkblue'),
 
 
 # multitaper analysis
-dat <- data.frame(t=eva[2:(nr-1)], e=ev.tap)
+dat <- data.frame(t=eva[2:(length(eva)-1)], e=ev.tap)
 dat2 <- resample(dat, seq(0.05, 10, by = 0.05))
 
 eha(dat2,win=8,pad=1000, step=1, output=6)
 
+library(astrochron)
+mtm(ev_f, demean = T, ntap = 3, output = 3, pl=2)

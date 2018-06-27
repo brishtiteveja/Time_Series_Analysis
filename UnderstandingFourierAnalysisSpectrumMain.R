@@ -8,13 +8,19 @@ age = c(0.05, 0.15, 0.25, 0.35, 0.45, 0.55, 0.65, 0.75, 0.85, 0.95, 1.05, 1.15, 
 #freq=c(89, 55, 55, 45, 39, 32, 32, 29, 21, 17, 19, 17, 17, 17, 23, 31, 56, 59, 65, 64, 66, 67, 71, 73, 64, 36, 36, 37, 35, 38, 40, 39, 34, 31, 33, 38, 40, 37, 36, 32, 30, 30, 32, 39, 37, 38, 34, 34, 30, 32, 30, 32, 29, 33, 33, 31, 31, 34, 42, 43, 40, 41, 41, 33, 34, 47, 49, 46, 38, 35, 39, 38, 38, 35, 38, 34, 32, 31, 32, 38, 32, 30, 30, 33, 29, 14, 14, 16, 15, 9, 25, 25, 31, 29, 31, 45, 45, 45, 47, 47, 33, 36, 34, 34, 32, 23, 23, 36, 35, 35, 34, 31, 27, 25, 30, 46, 47, 34, 38, 38, 41, 45, 45, 45, 42, 24, 24, 23, 20, 21, 25, 21, 21, 21, 20, 18, 17, 16, 14, 14, 28, 28, 28, 32, 33, 37, 37, 37, 38, 37, 20, 20, 20, 19, 18, 16, 16, 17, 19, 21, 16, 16, 16, 14, 17, 26, 26, 27, 27, 25, 35, 35, 35, 37, 34, 25, 25, 23, 22, 22, 20, 21, 21, 18, 17, 16, 16, 16, 13, 13, 38, 37, 37, 37, 37, 42, 42, 42, 42, 44, 18, 18, 18, 18, 18, 13, 13, 13, 17, 15, 12, 6, 6, 6, 6, 6, 14, 15, 12, 12, 12, 16, 16, 22, 22, 21, 15, 14, 14, 14, 14, 13, 13, 7, 7, 7, 7, 7, 6, 6, 6, 16, 16, 18, 18, 18, 18, 18, 22, 22, 22, 12, 12, 10, 10, 10, 9, 9, 5, 5, 5, 2, 2, 2, 2, 2, 15, 15, 15, 15, 15, 19, 19, 19, 19, 19, 5, 5, 6, 6, 6, 3, 3, 3, 3, 3, 4, 4, 3, 3, 3, 18, 18, 18, 18, 18, 16, 16, 16, 16, 16, 5, 6, 6, 6, 6, 9, 9, 9, 9, 9, 4, 3, 4, 4, 4, 12, 12, 12, 12, 12, 12, 12, 11, 12, 12, 1, 1, 1, 1, 1, 3, 3, 5, 4, 5, 5, 5, 5, 5, 5, 30, 30, 28, 28, 27, 29, 29, 29, 29, 29, 2, 2, 2, 2, 2, 0, 0, 0, 0, 0, 1, 1, 1, 1, 1, 7, 7, 7, 7, 7, 6, 6, 6, 6, 6, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 25, 25, 25, 25, 25, 27, 27, 27, 27, 27, 6, 6, 6, 6, 6, 4, 4, 4, 4, 4, 1, 1, 1, 1, 1, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 0, 0, 0, 0, 0, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 10, 10, 10, 10, 10, 10, 10, 10, 10, 10, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 1, 1, 1, 1, 5, 5, 5, 5, 5, 9, 9, 9, 9, 9, 5, 5, 5, 5, 5, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0)
 
 #freq=c(42, 2, 12, 7, 7, 1, 3, 10, 4, 1, 8, 2, 2, 1, 0, 1, 0, 2, 2, 7, 0, 2, 2, 9, 30, 2, 3, 8, 1, 9, 1, 6, 4, 0, 2, 2, 4, 6, 4, 11, 0, 1, 1, 2, 7, 4, 1, 5, 0, 9, 0, 3, 8, 0, 8, 0, 1, 1, 2, 7, 2, 0, 12, 0, 6, 0, 4, 9, 3, 4, 3, 0, 4, 1, 19, 2, 1, 1, 0, 8, 2, 0, 1, 4, 15, 0, 0, 2, 6, 2, 0, 0, 4, 0, 0, 0, 2, 1, 0, 18, 0, 6, 2, 2, 14, 0, 2, 3, 0, 4, 3, 4, 2, 0, 5, 0, 15, 2, 0, 3, 0, 0, 0, 5, 21, 1, 2, 6, 0, 6, 4, 0, 0, 2, 3, 1, 1, 3, 1, 10, 0, 0, 0, 1, 1, 0, 0, 1, 1, 24, 0, 0, 4, 2, 5, 0, 0, 2, 0, 7, 0, 0, 3, 1, 3, 0, 1, 4, 2, 2, 0, 0, 1, 4, 12, 0, 2, 4, 0, 12, 0, 0, 3, 1, 3, 0, 0, 3, 0, 10, 1, 0, 0, 0, 2, 0, 0, 0, 0, 35, 0, 0, 0, 0, 7, 0, 0, 0, 2, 3, 6, 0, 0, 0, 1, 1, 0, 4, 0, 0, 0, 0, 0, 0, 1, 9, 1, 1, 0, 0, 4, 0, 6, 0, 0, 3, 0, 1, 0, 0, 3, 0, 0, 0, 0, 3, 0, 0, 0, 0, 13, 0, 2, 0, 0, 3, 0, 4, 0, 0, 3, 0, 0, 0, 0, 2, 0, 0, 0, 0, 0, 0, 0, 0, 0, 15, 0, 0, 0, 0, 4, 0, 0, 0, 0, 1, 0, 1, 0, 0, 1, 0, 0, 0, 0, 2, 0, 0, 0, 0, 16, 0, 0, 0, 0, 0, 0, 0, 0, 0, 5, 1, 0, 0, 0, 3, 0, 0, 0, 0, 0, 0, 1, 0, 0, 11, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 2, 0, 2, 0, 1, 0, 0, 0, 0, 0, 27, 0, 0, 0, 0, 2, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 6, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 24, 0, 0, 0, 0, 3, 0, 0, 0, 0, 3, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 7, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 10, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 4, 0, 0, 0, 0, 5, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 13, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 3, 0, 0, 0, 0, 0, 0, 0, 0, 0, 6, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 15, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 3, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 2, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0)
-
 freq=c(70, 19, 13, 6, 25, 41, 17, 23, 10, 17, 22, 10, 21, 26, 27, 12, 22, 10, 4, 21, 24, 9, 14, 20, 26, 15, 9, 16, 2, 26, 11, 9, 7, 9, 17, 18, 7, 13, 3, 35, 7, 11, 2, 4, 1, 11, 10, 4, 3, 3, 15, 7, 3, 2, 0, 15, 4, 2, 1, 2, 16, 0, 6, 3, 1, 11, 1, 0, 5, 0, 27, 2, 0, 0, 1, 6, 0, 1, 0, 1, 24, 3, 3, 1, 0, 7, 0, 0, 1, 0, 10, 0, 0, 0, 1, 4, 5, 0, 0, 0, 13, 0, 0, 3, 0, 6, 0, 0, 1, 0, 15, 1, 0, 0, 0, 3, 0, 2, 0, 0)
 
-plot.fourier <- function(fourier.series, f.0, ts) {
+plot.fourier <- function(fourier.series, f.0, ts, 
+                         type='l', axes=TRUE, horizAxes = TRUE,
+                         xlab="time", ylab="f(t)", 
+                         col = 'black', lwd=1, lty=1) {
   w <- 2*pi*f.0
   trajectory <- sapply(ts, function(t) fourier.series(t,w))
-  plot(ts, trajectory, type="l", xlab="time", ylab="f(t)"); abline(h=0,lty=3)
+  plot(ts, trajectory, 
+       type=type, xlab=xlab, ylab=ylab, axes=axes, 
+       col=col, lwd=lwd, lty=lty)
+  if (horizAxes)
+    abline(h=0,lty=3)
 }
 
 # An example
@@ -24,6 +30,9 @@ acq.freq <- 100                    # data acquisition frequency (Hz)
 time     <- 6                      # measuring time interval (seconds)
 ts       <- seq(0,time,1/acq.freq) # vector of sampling time-points (s) 
 f.0      <- 1/time                 # fundamental frequency (Hz)
+
+# example plot
+plot.fourier(function(t,w) {sin(w*t)}, 2*f.0, ts)
 
 dc.component       <- 0
 component.freqs    <- c(3,10)      # frequency of signal components (Hz)
@@ -56,10 +65,51 @@ convert.fft <- function(cs, sample.rate=1) {
                    freq     = 0:(length(cs)-1) * sample.rate / length(cs),
                    strength = sapply(cs, distance.center),
                    delay    = sapply(cs, angle))
+  df <- df[order(df$strength, decreasing = T),]
   df
 }
 
-convert.fft(fft(ldeaths))
+plot(ldeaths)
+r <- convert.fft(fft(ldeaths))
+r
+
+time <- length(ldeaths)
+f <- 1/time
+acq.freq <- 100
+ts <- seq(0, time, by=1/acq.freq)
+func <- function(t,w) sin(w*t)
+
+# first dominant cycle
+cycle1 = r$cycle[2]
+par(new=T)
+plot.fourier(func, f.0 = cycle1 * f, ts, 
+             col='red', axes=FALSE, xlab="", ylab="", horizAxes = FALSE)
+cycle2 = r$cycle[4]
+par(new=T)
+plot.fourier(func, f.0 = cycle2 * f, ts, 
+             col='green', axes=FALSE, xlab="", ylab="", horizAxes = FALSE)
+cycle3 = r$cycle[3]
+par(new=T)
+plot.fourier(func, f.0 = cycle3 * f, ts, 
+             col='orange', axes=FALSE, xlab="", ylab="", horizAxes = FALSE)
+
+
+cF <- c(2,4)
+dc.component       <- 0
+component.freqs    <- r$cycle[cF]     
+component.delay    <- r$delay[cF]       
+component.strength <- c(1,1) #r$strength[cF] 
+
+func2 <- function(t,w) { 
+  dc.component + 
+    sum( component.strength * sin(component.freqs*w*t + component.delay)) 
+}
+plot(ldeaths)
+par(new=T)
+plot.fourier(func2, f.0 = 1/time, ts, 
+             col='darkblue', lwd=2, 
+             axes=FALSE, xlab="", ylab="", horizAxes = FALSE)
+
 
 # returns the x.n time series for a given time sequence (ts) and
 # a vector with the amount of frequencies k in the signal (X.k)
@@ -92,22 +142,43 @@ N <- length(ldeaths)
 tr <- abs(get.trajectory(X.k, 0:(N-1), acq.freq = 1))
 plot(tr, type='l', ylab='ldeaths') # Got the trajectory
 
+psd_smoothing <- function(PowerSpec, method = 'hanning') {
+  PowerSpec.han <- c()
+  
+  if (method == 'hanning') {
+    i <- 1
+    PowerSpec.han[i] <- PowerSpec[i]
+    nr <- length(PowerSpec)
+    for (n in 2:(nr-1)) {
+      h <- hanning_ma(PowerSpec, n)
+      PowerSpec.han <- c(PowerSpec.han, h)
+    }
+    PowerSpec.han[nr] <- PowerSpec[nr]
+  }
+  
+  return(PowerSpec.han)
+}
+
 plot.frequency.spectrum <- function(X.k, 
                                     xlimits=c(0,length(X.k)/2), 
                                     xlab='Frequency',
                                     ylab='Amplitude',
+                                    power=FALSE,
                                     density=FALSE,
-                                    plot.type='l'
+                                    plot.type='l', 
+                                    main="", 
+                                    log='no',
+                                    smoothing=FALSE
                                     ) { 
     x <- (0:(length(X.k)-1)) 
     plot.data  <- cbind(x, Mod(X.k))
-  # TODO: why this scaling is necessary?
     plot.data[2:length(X.k),2] <- 2*plot.data[2:length(X.k),2] 
     
     N <- length(x)
-    freq <- x
     
+    freq <- x/N
     amp <- plot.data[,2]
+    
     if(density) {
       tot <- sum(amp)
       amp <- amp/tot
@@ -119,27 +190,88 @@ plot.frequency.spectrum <- function(X.k,
       ylim=c(0,max(Mod(plot.data[,2])))
     }
     
-    plot(freq, amp, lwd=2, main="", type=plot.type,
+    if (log=='no')
+      logp=''
+    else {
+      logp=log
+      
+      # avoid plotting values related to zero
+      freq <- freq[2:length(freq)]
+      amp <- amp[2:length(amp)]
+      ylim <- c(0.00000001, max(amp))
+      xlimits=c(0.00000001,length(X.k)/2) 
+    }
+    
+    yval <- amp
+    ylab <- "Amplitude"
+      
+    pwr <- amp^2/N 
+    # hanning smoothing of the PSD
+    if(smoothing)
+      pwr <- psd_smoothing(pwr)
+    
+    if (power) {
+      yval <- pwr
+      ylab <- "Power"
+      if (log=='no')
+        ylim <- c(0, max(pwr))
+      else
+        ylim <- c(0.000001, max(pwr))
+    }
+    
+    if(!missing(main)) {
+      main = main
+    } 
+    
+    xlimits = xlimits/N
+    plot(freq, yval, lwd=2, main=main, type=plot.type,
                 #xaxp=c(0, N, N/6),
                 xlim=xlimits, # show only half of the frequency 
                 ylim=ylim,
-                xlab=xlab, ylab="Amplitude") 
+                xlab=xlab, ylab=ylab, log=logp) 
+   
+    NN <- length(freq) / 2
+    res <- data.frame(freq=freq[1:NN], amp=amp[1:NN], power = pwr[1:NN])
+    res <- res[order(res$amp, decreasing = TRUE), ]
+    return(res)
 }
+
 plot.spectrum <- function(X, 
-                          xlimits=c(0,length(X.k)/2), 
+                          demean = TRUE,
+                          detrend = FALSE,
+                          xlimits=c(0,length(X)/2), 
                           xlab='Frequency',
                           ylab='Amplitude',
+                          power=FALSE,
                           density=FALSE,
-                          plot.type='l'
+                          plot.type='l', 
+                          main="",
+                          log="no",
+                          smoothing=FALSE
 ) {
+  if (demean)
+    X <- X - mean(X)
+  
+  if (detrend) {
+    xv <- 1:length(X)
+    X.fit <- lm(X ~ xv)
+    X <- X.fit$residuals
+  }
+  
   X.k <- fft(X)
-  plot.frequency.spectrum(X.k, 
+  res <- plot.frequency.spectrum(X.k, 
                           xlimits, 
                           xlab,
                           ylab,
+                          power,
                           density,
-                          plot.type
+                          plot.type,
+                          main, 
+                          log,
+                          smoothing
   ) 
+  
+  return(res)
 }
 
 acq.freq <- 100                    # data acquisition (sample) frequency (Hz)
@@ -158,6 +290,8 @@ plot(trajectory, t='l')
 head(trajectory,n=30)
 X.k <- fft(trajectory)                   # find all harmonics with fft()
 plot.frequency.spectrum(X.k, xlimits=c(0,20), plot.type='h')
+plot.frequency.spectrum(X.k, xlimits=c(0,20), plot.type='l')
+r <- plot.frequency.spectrum(X.k, xlimits=c(0,20), plot.type='l', power = TRUE)
 plot.frequency.spectrum(X.k, xlimits=c(0,20), density=TRUE)
 
 #demeaning
@@ -238,7 +372,7 @@ plot.show <- function(trajectory,
   y <- rep(0, length(X.k))
   if (harmonics[1]>-1) {
     for(i in 0:length(harmonics)) {
-      r <- plot.harmonic(X.k, harmonics[i], ts, acq.freq, color=i+1)
+      r <- plot.harmonic(X.k, harmonics[i], ts, acq.freq, color=i+2)
       y <- y + r 
     }
   }
@@ -263,7 +397,7 @@ y <- y1+y2+y3
 par(new=TRUE)
 plot(ts, y, t='l', col='darkblue', lwd=2, axes = FALSE, xlab='', ylab='')
 
-plot.show(td.dm, time = 6, harmonics = c(1,2, 6, 12, 20, 24), plot.freq = TRUE, scale=2.5)
+plot.show(td.dm, time = 6, harmonics = c(6, 12), plot.freq = TRUE, scale=2.5)
 
 # Some other examples (source: http://www.di.fc.ul.pt/~jpn/r/fourier/fourier.html)
 trajectory <- 4:1
@@ -292,12 +426,13 @@ plot.show(trajectory, time=1, harmonics=c(3, 20, 24), scale=15)
 
 # Can we reproduce using periodogram from Genecycle library
 library(GeneCycle)
+trajectory <- ldeaths
 f.data <- GeneCycle::periodogram(trajectory)
 harmonics <- 1:(acq.freq/2)
 
 plot(f.data$freq[harmonics]*length(trajectory), 
      f.data$spec[harmonics]/sum(f.data$spec), 
-     xlab="Harmonics (Hz)", ylab="Amplitute Density", type="h")
+     xlab="Harmonics (Hz)", ylab="Amplitute Density", type="l")
 
 trajectory1 <- trajectory + 25*ts # let's create a linear trend 
 plot(trajectory1, type="l")
@@ -460,7 +595,7 @@ bisp <- bispec(ldeaths)
 
 # blackman-tukey spec
 library(timsac)
-auspec(ldeaths, lag = length(ldeaths)*1/3)
+Aspec = auspec(ldeaths, lag = length(ldeaths)*1/3)
 
 # black-man tukey method
 t <- seq(1, 600) #, by=0.1)
@@ -474,7 +609,11 @@ BTSpec <- auspec(y, lag=length(y)*1/3)
 
 lag = as.numeric(1/3)
 
-spec.BT <- function(y, dt, lag=1/3, x_limit=c(0,0.5), plot=TRUE, unit="") {
+spec.BT <- function(y, dt, demean=FALSE, lag=1/3, plot=TRUE, 
+                    unit="", x_lim=c(0,0.5), type='l') {
+  if(demean)
+    y <- y - mean(y)
+  
   x <- as.numeric(length(y) * lag)
   lagno = round(x)
 
@@ -532,7 +671,7 @@ spec.BT <- function(y, dt, lag=1/3, x_limit=c(0,0.5), plot=TRUE, unit="") {
   p = p/sd(p)
 
   # plot the results
-  if(!exists("t")) {
+  if(!exists("dt")) {
     stop("Please provide sampling interval dt.")
   }
   fNyquist = 0.5/(dt)
@@ -541,7 +680,12 @@ spec.BT <- function(y, dt, lag=1/3, x_limit=c(0,0.5), plot=TRUE, unit="") {
   if (plot)  {
     if (unit != "")
       xlab = paste('frequency (1 / ', unit, ")", sep="")
-    plot(f, p[1:N], t='l', xlim=x_limit, 
+    
+    if(missing("x_lim"))
+      x_lim = c(0, max(f))
+    if(missing("type"))
+      type = 'l'
+    plot(f, p[1:N], type=type, xlim=x_lim, 
      ylab='spectral power', xlab = xlab)
   }
   
@@ -555,7 +699,7 @@ spec.BT(y, dt = 0.05, x_limit = c(0,0.06), unit="Kyr")
 
 # Blackman tukey from btpsd
 library(btpsd)
-btpsd <- function(y, type="Tukey", win=N , taper=0.5) {
+btpsd <- function(y, type="Tukey", win , taper=0.5) {
   ## INPUT ##
   ## y = time series of interest
   ## win = window length = number of autocorrelations in estimation, DEFAULT = 2 * sqrt(lenth(y))
@@ -580,6 +724,8 @@ btpsd <- function(y, type="Tukey", win=N , taper=0.5) {
   est <- Mod(fft(rw))^2/(2*pi*length(y))
   return(est)
 }
+
+btpsd(y)
 
 mem.spec <- function(y, ord=5,... ) {
   ## INPUT ##
@@ -712,6 +858,7 @@ abline(v=1/36)
 # BChron
 ## Not run:
 # Data from Glendalough
+library(Bchron)
 data(Glendalough)
 # Run in Bchronology - all but first age uses intcal13
 GlenOut = Bchronology(ages=Glendalough$ages,
