@@ -18,7 +18,7 @@ df2c <- dfxl[[c[2]]] # second column
 
 STARTING_AGE <- 0 + 0.000001
 ENDING_AGE <- 2005/1000 # 2Ka
-AGE_SLIDE <- 25/1000 # 50 yr
+AGE_SLIDE <- 50/1000 # 50 yr
 
 # second column
 c <- list()
@@ -736,125 +736,82 @@ library(psd)
 ##
 ## Using prewhiten to improve spectral estimates
 ##
-data(magnet)
-mts <- ts(magnet$clean)
-# add a slope
-mts.slope <- mts + seq_along(mts)
 # Prewhiten by removing mean+trend, and
 # AR model; fit truncates the series by
 # a few terms, so zero pad
-mts <- prewhiten(ldeaths - mean(ldeaths), AR.max=10, zero.pad="rear")
+mts <- prewhiten(ev.tap, AR.max=5, zero.pad="rear")
 mts.p <- mts[['prew_lm']]
 mts.par <- mts[['prew_ar']]
 # uniformly-tapered spectral estimates
 PSD <- psdcore(mts.p, ntaper=20)
+plot(PSD, log = 'no')
 PSD.ar <- psdcore(mts.par, ntaper=20)
 # remove the effect of AR model
 PSD.ar[['spec']] <- PSD.ar[['spec']] / mean(PSD.ar[['spec']])
 PSD[['spec']] <- PSD[['spec']] / PSD.ar[['spec']]
-plot(PSD, log='no', lwd=2, ylim=c(-5,35))
-plot(PSD, log='dB', add=TRUE, lwd=2, col="red")
-plot(PSD.ar, log='no', add=TRUE, col="blue", lwd=2)
+plot(PSD, log='no', lwd=2)
+#plot(PSD, log='dB', add=TRUE, lwd=2, col="red")
+#plot(PSD.ar, log='no', add=TRUE, col="blue", lwd=2)
+plot(PSD.ar$freq, PSD.ar$spec, t='l')
+PSDdf <- data.frame(PSD)
+PSDdf <- PSDdf[order(PSDdf$spec, decreasing = T),]
+PSDdf$period <- (time_window /(PSDdf$freq * length(ev.tap)))*1000
+head(PSDdf, 10)
+# Not very effective for frequency resolution, 
 
-evt <- ts(ev, start=0.04, frequency=20, deltat=5)
-library(psd)
+# Using multitaper
 library(multitaper)
-s <- spec.mtm(ts(ev), detrend= TRUE, nw=4, k=7)
-plot(s$freq, s$spec, t='l')
-  # , 
-  #             sineSmoothFact = 0.02,
-  #             xlab='Year', 
-  #             ylab='Relative Power Spectra [Amplitude]^2',
-  #             main='Spectral analysis using multitaper method',
-  #             Ftest = TRUE)
-idx <- seq(0,4,by=1)
-axis(side=1, at=idx, labels=FALSE)
-p_idx <- seq(1, length(period), by=5)
-mtext(side=1, padj = 1, text=round(period[p_idx],2), at=idx)
+Mspec <- spec.mtm(ev.tap, deltat=1,
+                  nw=4, k=7, log='no',
+                  sineSmoothFact = 0.02,
+                  xlab='Frequency',
+                  ylab='Power',
+                  Ftest = TRUE
+                  #,jackknife=TRUE
+                  )
+#plot(Mspec$freq, Mspec$spec, t='l', lwd=2)
+Mspecdf <- data.frame(freq=Mspec$freq, spec=Mspec$spec)
+Mspecdf <- Mspecdf[order(Mspecdf$spec, decreasing = T),]
+Mspecdf$period <- (time_window /(Mspecdf$freq * length(ev.tap)))*1000
+head(Mspecdf, 20)
+
+abline(v=0.05859375, col='red') # 432 yr
+abline(v=0.07031250, col='green') # 360 yr
+abline(v=0.08984375, col='blue') #281
 
 ### With spec.pgram --- ambiguous
-eha(data.frame(1:length(ldeaths), as.numeric(ldeaths)), tbw=3, win=1000, pad=1000)
+N <- length(ev.tap)
+ev.mtmdf <- data.frame(1:N, ev.tap)
+ev_model <- linterp(ev.mtmdf, 
+                    dt=1)
+eh <- eha(ev_model,
+    tbw=7, 
+    win=20,  # Make less than 50 for evolutive 
+    pl=2, output=6, genplot = 4)
 
+# Make win > 100
+ehdf <- data.frame(eh)
+ehdf <- ehdf[order(ehdf$Harmonic_CL, decreasing = T),]
+ehdf$period <- (time_window/(ehdf$Frequency * N)) * 1000
+head(ehdf, n = 10)
 
-#CC <- ts(ev, start=0, end=12, frequency=10)  # 1000/100 = 10
-CC <- ts(ev.tap, start=0, end=1, frequency=12)  # 5000/100 = 50
-par(mfrow=c(1,2))
-P1 <- spec.pgram(CC,log='no',taper=0,pad=0,fast=FALSE,demean=TRUE,detrend=FALSE, xlab="Frequency(1/Ky)") 
-
-# Periods calculated from frequency
-Periods = time_interval/P1$freq
-Periods
-
-abline(v=24, lty=2)
-abline(v=37, lty=2)
-abline(v=48, lty=2)
-# logarithmic plot
-P2 <- spec.pgram(CC,log='yes',taper=0,pad=0,fast=FALSE,demean=TRUE,detrend=FALSE, xlab="Frequency(1/Ky)") 
-
-abline(v=24, lty=2)
-abline(v=37, lty=2)
-abline(v=48, lty=2)
-
-par(mfrow=c(2,1))
-plot.frequency.spectrum(ev.fft, xlab='Cycles / 5Ka')
-plot.spectrum(X=ev.fft)
-
-amp <- Mod(ev.fft)
-N <- length(amp)
-amp.h <- amp[0:(N/2)]
-x <- 0:(N/2-1)
-d <- data.frame(x, amp.h)
-d.sorted <- d[order(amp.h, decreasing = TRUE),]
-head(d.sorted, 20)
-
-hm <- c(10, 20, 19, 3, 13)
-plot.show(ev.tap, start_time = 0, time = 5, harmonics = hm,
-          xlab='Age (Ka)', ylab='', scale=0.5)
-
-hm_l <- paste(hm, ' cycles')
-hm_l <- c(hm_l, 'combined cycle')
-legend('topleft', legend=hm_l, col = c(1, 2, 3, 4, 5, 6,'darkblue'), 
-       lty = rep(1,7), cex=0.40)
-
-Xspec<- spec.pgram(ev.tap, log='no', lwd=2)
-
-BTspec <- spec.BT(ev.tap, plot=FALSE, dt=0.025)
-plot(BTspec$freq, BTspec$spec, t='l', lwd=2)
-df <- data.frame(freq=BTspec$freq, spec=BTspec$spec)
-df <- df[order(df$spec, decreasing=T),]
-df$period <- (1/df$freq)*1000
-df
-
-library(multitaper)
-Mspec <- spec.mtm(ev.tap, deltat=0.025,
-                  nw = 4, k = 7,
-                  jackknife = TRUE, 
-                  log='no', lwd=2)
-
-a <- unlist(Mspec$mtm$jk$upperCI) #Mspec$spec)
-N <- length(a)
-a.h <- a[0:(N/2)]
-x <- 0L:(N/2-1)
-d <- data.frame(x, a.h)
-d.sorted <- d[order(a.h, decreasing = TRUE),]
-head(Mspec$freq[d.sorted$x], 20)
-Mspec$period <- 1000/Mspec$freq
-head(Mspec$period[d.sorted$x], 20)
-
-hm <- c(35, 17)
-plot.show(ev.tap, start_time = min(eva), time = max(eva) - min(eva), harmonics = hm,
-          xlab='Age (Ka)', ylab='', scale=1)
-hm_l <- paste(hm, ' cycles')
-hm_l <- c(hm_l, 'combined cycle')
-legend('topright', legend=hm_l, col = c('blue','green','red','darkblue'),
-       lty = rep(1,4), cex=0.40)
-
-
-# multitaper analysis
-dat <- data.frame(t=eva[2:(length(eva)-1)], e=ev.tap)
-dat2 <- resample(dat, seq(0.05, 10, by = 0.05))
-
-eha(dat2,win=8,pad=1000, step=1, output=6)
+# Frequency Harmonic_CL   period
+# 4 0.1679688   0.9899981 150.7212
+# 2 0.0625000   0.9803090 405.0633
+# 5 0.2500000   0.9685964 101.2658
+# 3 0.0781250   0.9509427 324.0506
+# 1 0.0468750   0.9086676 540.0844
 
 library(astrochron)
-mtm(ev_f, demean = T, ntap = 3, output = 3, pl=2)
+Mspec <- mtm(ev.mtmdf, demean = T, 
+             ntap = 5, tbw = 7, ar1 = T,
+             output = 3, pl=2)
+Mspecdf <- data.frame(Mspec)
+Mspecdf <- ehdf[order(Mspecdf$Harmonic_CL, decreasing = T),]
+Mspecdf$period <- (time_window/(Mspecdf$Frequency * N)) * 1000
+head(Mspecdf, n = 10)
+
+# Frequency Harmonic_CL   period
+# 2 0.0625000   0.9803090 405.0633
+# 4 0.1679688   0.9899981 150.7212
+# 5 0.2500000   0.9685964 101.2658
