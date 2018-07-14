@@ -161,7 +161,7 @@ psd_smoothing <- function(PowerSpec, method = 'hanning') {
 
 plot.frequency.spectrum <- function(X.k, 
                                     xlimits=c(0,length(X.k)/2), 
-                                    xlab='Frequency',
+                                    xlab='Frequency', 
                                     ylab='Amplitude',
                                     power=FALSE,
                                     density=FALSE,
@@ -223,7 +223,9 @@ plot.frequency.spectrum <- function(X.k,
       main = main
     } 
     
-    xlimits = xlimits/N
+    if (missing(xlimits))
+      xlimits = xlimits/N
+    
     plot(freq, yval, lwd=2, main=main, type=plot.type,
                 #xaxp=c(0, N, N/6),
                 xlim=xlimits, # show only half of the frequency 
@@ -233,6 +235,7 @@ plot.frequency.spectrum <- function(X.k,
     NN <- length(freq) / 2
     res <- data.frame(freq=freq[1:NN], amp=amp[1:NN], power = pwr[1:NN])
     res <- res[order(res$amp, decreasing = TRUE), ]
+    
     return(res)
 }
 
@@ -371,8 +374,8 @@ plot.show <- function(trajectory,
   
   y <- rep(0, length(X.k))
   if (harmonics[1]>-1) {
-    for(i in 0:length(harmonics)) {
-      r <- plot.harmonic(X.k, harmonics[i], ts, acq.freq, color=i+2)
+    for(i in 1:length(harmonics)) {
+      r <- plot.harmonic(X.k, harmonics[i], ts, acq.freq, color=i)
       y <- y + r 
     }
   }
